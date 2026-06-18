@@ -682,20 +682,10 @@ else:
 # 11. 경기 운영판 화면
 # -------------------------------------------------
 if page == "🏸 경기 운영판":
-    top1, top2, top3, top4 = st.columns(4)
 
-    with top1:
-        st.metric("참석", len(st.session_state.today_players))
-
-    with top2:
-        st.metric("배정", len(all_assigned_names()))
-
-    with top3:
-        st.metric("휴식", len(get_rest_players()))
-
-    with top4:
-        st.metric("완료", st.session_state.completed_count)
-
+    # ---------------------------------------------
+    # 1. 선택된 선수 표시
+    # ---------------------------------------------
     if st.session_state.selected_player is None:
         st.warning("선택된 선수 없음")
     else:
@@ -714,8 +704,32 @@ if page == "🏸 경기 운영판":
                     st.session_state.selected_player = None
                     st.rerun()
 
+    # ---------------------------------------------
+    # 2. 휴식자 영역을 최상단으로 이동
+    # ---------------------------------------------
+    st.subheader("🪑 휴식자 / 다음 배정 후보")
+
+    rest_players = get_rest_players()
+
+    if len(rest_players) == 0:
+        st.write("현재 휴식자가 없습니다.")
+    else:
+        rest_cols = st.columns(6)
+
+        for i, player in enumerate(rest_players):
+            with rest_cols[i % 6]:
+                if st.button(
+                    short_player_label(player["name"]),
+                    key=f"rest_select_top_{i}"
+                ):
+                    st.session_state.selected_player = player["name"]
+                    st.rerun()
+
     st.divider()
 
+    # ---------------------------------------------
+    # 3. 진행코트
+    # ---------------------------------------------
     st.subheader("🔥 진행코트")
 
     active_cols = st.columns(3)
@@ -724,6 +738,9 @@ if page == "🏸 경기 운영판":
         with active_cols[i]:
             render_match_card(f"{i + 1}코트", "active", i)
 
+    # ---------------------------------------------
+    # 4. 대기코트
+    # ---------------------------------------------
     st.subheader("⏳ 대기코트")
 
     waiting_cols = st.columns(3)
@@ -732,22 +749,24 @@ if page == "🏸 경기 운영판":
         with waiting_cols[i]:
             render_match_card(f"대기{i + 1}", "waiting", i)
 
-    with st.expander("🪑 휴식자 / 다음 배정 후보 보기"):
-        rest_players = get_rest_players()
+    st.divider()
 
-        if len(rest_players) == 0:
-            st.write("현재 휴식자가 없습니다.")
-        else:
-            rest_cols = st.columns(5)
+    # ---------------------------------------------
+    # 5. 참석 / 배정 / 휴식 / 완료 영역을 맨 아래로 이동
+    # ---------------------------------------------
+    bottom1, bottom2, bottom3, bottom4 = st.columns(4)
 
-            for i, player in enumerate(rest_players):
-                with rest_cols[i % 5]:
-                    if st.button(
-                        short_player_label(player["name"]),
-                        key=f"rest_select_compact_{i}"
-                    ):
-                        st.session_state.selected_player = player["name"]
-                        st.rerun()
+    with bottom1:
+        st.metric("참석", len(st.session_state.today_players))
+
+    with bottom2:
+        st.metric("배정", len(all_assigned_names()))
+
+    with bottom3:
+        st.metric("휴식", len(get_rest_players()))
+
+    with bottom4:
+        st.metric("완료", st.session_state.completed_count)
 
 
 # -------------------------------------------------
