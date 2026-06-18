@@ -411,6 +411,20 @@ def remove_today_player(name):
     ]
 
 
+def delete_member_from_members(name):
+    # 오늘 참석자, 진행코트, 대기코트에서도 제거
+    remove_today_player(name)
+
+    # 전체 회원명부에서 제거
+    st.session_state.members = [
+        member for member in st.session_state.members
+        if member["name"] != name
+    ]
+
+    # CSV 저장
+    save_members(st.session_state.members)
+
+
 def assign_selected_player(match_type, court_index, slot):
     selected = st.session_state.selected_player
 
@@ -683,9 +697,6 @@ else:
 # -------------------------------------------------
 if page == "🏸 경기 운영판":
 
-    # ---------------------------------------------
-    # 1. 선택된 선수 표시
-    # ---------------------------------------------
     if st.session_state.selected_player is None:
         st.warning("선택된 선수 없음")
     else:
@@ -704,9 +715,6 @@ if page == "🏸 경기 운영판":
                     st.session_state.selected_player = None
                     st.rerun()
 
-    # ---------------------------------------------
-    # 2. 휴식자 영역을 최상단으로 이동
-    # ---------------------------------------------
     st.subheader("🪑 휴식자 / 다음 배정 후보")
 
     rest_players = get_rest_players()
@@ -727,9 +735,6 @@ if page == "🏸 경기 운영판":
 
     st.divider()
 
-    # ---------------------------------------------
-    # 3. 진행코트
-    # ---------------------------------------------
     st.subheader("🔥 진행코트")
 
     active_cols = st.columns(3)
@@ -738,9 +743,6 @@ if page == "🏸 경기 운영판":
         with active_cols[i]:
             render_match_card(f"{i + 1}코트", "active", i)
 
-    # ---------------------------------------------
-    # 4. 대기코트
-    # ---------------------------------------------
     st.subheader("⏳ 대기코트")
 
     waiting_cols = st.columns(3)
@@ -751,9 +753,6 @@ if page == "🏸 경기 운영판":
 
     st.divider()
 
-    # ---------------------------------------------
-    # 5. 참석 / 배정 / 휴식 / 완료 영역을 맨 아래로 이동
-    # ---------------------------------------------
     bottom1, bottom2, bottom3, bottom4 = st.columns(4)
 
     with bottom1:
@@ -844,6 +843,10 @@ elif page == "👥 참석자 관리":
                             if st.button("오늘 참석", key=f"add_today_{member['name']}"):
                                 add_member_to_today(member)
                                 st.rerun()
+
+                        if st.button("회원 삭제", key=f"delete_member_{member['name']}"):
+                            delete_member_from_members(member["name"])
+                            st.rerun()
 
     with tab_today:
         st.subheader("오늘 참석자")
